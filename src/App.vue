@@ -388,7 +388,7 @@
             this.minersData.S9.btc_revenue_24 = this.API_ENDPOINTS.BTC.RESPONSE.btc_revenue
             this.BTC_TO_USD = this.API_ENDPOINTS.BTC.RESPONSE.exchange_rate3
           }).catch(error => {
-            debugger
+            // debugger
             return error
           })
         axios.get(this.API_ENDPOINTS.ALPHA.URL)
@@ -396,7 +396,7 @@
             this.API_ENDPOINTS.ALPHA.RESPONSE = response.data
             this.minersData.ALPHA.btc_revenue_24 = this.API_ENDPOINTS.ALPHA.RESPONSE.btc_revenue
           }).catch(error => {
-            debugger
+            // debugger
             return error
           })
         axios.get(this.API_ENDPOINTS.L3.URL)
@@ -404,7 +404,7 @@
             this.API_ENDPOINTS.L3.RESPONSE = response.data
             this.minersData.L3.btc_revenue_24 = this.API_ENDPOINTS.L3.RESPONSE.btc_revenue
           }).catch(error => {
-            debugger
+            // debugger
             return error
           })
         return 0
