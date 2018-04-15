@@ -356,7 +356,7 @@
                   btc_revenue: parseFloat((revenue * (month + 1)).toFixed(5)),
                   usd_revenue: usdRevenue,
                   expenses: expenses,
-                  balance: parseFloat(balance) - this.pricePerPod
+                  balance: parseFloat(balance) - this.totalInvested
                 }
               }
             }
