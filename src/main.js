@@ -3,6 +3,8 @@
 import Vue from 'vue'
 import App from './App'
 import router from './router'
+import VueI18n from 'vue-i18n'
+
 import {
   Vuetify,
   VApp,
@@ -22,7 +24,8 @@ import {
   VSelect,
   VDataTable,
   VSnackbar,
-  VAlert
+  VAlert,
+  VExpansionPanel
 } from 'vuetify'
 import '../node_modules/vuetify/src/stylus/app.styl'
 
@@ -45,7 +48,8 @@ Vue.use(Vuetify, {
     VSelect,
     VDataTable,
     VSnackbar,
-    VAlert
+    VAlert,
+    VExpansionPanel
   }// },
   // theme: {
   //   primary: '#ee44aa',
@@ -57,6 +61,19 @@ Vue.use(Vuetify, {
   //   warning: '#FFC107'
   // }
 })
+Vue.use(VueI18n)
+
+const numberFormats = {
+  'en-US': {
+    currency: {
+      style: 'currency', currency: 'USD'
+    }
+  }
+}
+
+const i18n = new VueI18n({
+  numberFormats
+})
 
 Vue.config.productionTip = false
 
@@ -65,5 +82,6 @@ new Vue({
   el: '#app',
   router,
   components: { App },
-  template: '<App/>'
+  template: '<App/>',
+  i18n
 })

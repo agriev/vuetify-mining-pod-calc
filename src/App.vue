@@ -15,16 +15,16 @@
         </v-alert>
         <v-form>
           <v-subheader>Price per pod</v-subheader>
-          <!--<v-slider :min="1" :max="1000000000" v-model="pricePerPod"></v-slider>-->
-          <v-text-field v-model="pricePerPod" prefix="$" type="number" value="true"></v-text-field>
+          <!--<v-slider :min="1" :max="1000000000" v-model="pricePerPod"></v-slider>   -->
+          <v-text-field v-model.number="pricePerPod" prefix="$" type="number" ></v-text-field>
           <v-subheader>S9 %</v-subheader>
-          <v-slider v-on:input="onPercentSliderChange" id="s9-slider" :min="0" :max="100"
+          <v-slider v-on:input="onPercentSliderChange('S9')" thumb-label id="s9-slider" :min="0" :max="100"
                     v-model="minersData.S9.percent"></v-slider>
           <v-subheader>Alpha Miner %</v-subheader>
-          <v-slider v-on:input="onPercentSliderChange" id="alpha-slider" :min="0" :max="100"
+          <v-slider v-on:input="onPercentSliderChange('ALPHA')" thumb-label id="alpha-slider" :min="0" :max="100"
                     v-model="minersData.ALPHA.percent"></v-slider>
           <v-subheader>L3+ %</v-subheader>
-          <v-slider v-on:input="onPercentSliderChange" id="l3-slider" :min="0" :max="100"
+          <v-slider v-on:input="onPercentSliderChange('L3')" thumb-label id="l3-slider" :min="0" :max="100"
                     v-model="minersData.L3.percent"></v-slider>
           <v-subheader> Distributed {{minersPercentSum}}% keep it 100%</v-subheader>
           <!--<v-select label="Electricity" :items="electricity_costs" :change="electricity = "></v-select>-->
@@ -78,7 +78,7 @@
               </v-list-tile>
               <v-list-tile>
                 <v-list-tile-content>Total Invested</v-list-tile-content>
-                <v-list-tile-action>${{ totalInvested }}</v-list-tile-action>
+                <v-list-tile-action>{{ $n(totalInvested, 'currency') }}</v-list-tile-action>
               </v-list-tile>
               <v-list-tile>
                 <v-list-tile-content>Total devices</v-list-tile-content>
@@ -86,7 +86,7 @@
               </v-list-tile>
               <v-list-tile>
                 <v-list-tile-content>BTC to USD</v-list-tile-content>
-                <v-list-tile-action>${{BTC_TO_USD.toFixed(2)}}</v-list-tile-action>
+                <v-list-tile-action>{{ $n(BTC_TO_USD.toFixed(2), 'currency') }}</v-list-tile-action>
               </v-list-tile>
               <v-list-tile>
                 <v-list-tile-content>% of Pod power</v-list-tile-content>
@@ -102,26 +102,34 @@
               </v-list-tile>
             </v-list>
           </v-flex>
-          <v-flex xs7
-          v-for="miner in minersArrayOfIncome"
-          :key="miner.id">
-            <v-subheader>{{ miner.name }} Monthly Profit</v-subheader>
-            <v-data-table
-              :headers="revenueTableHeaders"
-              :items="miner.data">
-              <!--hide-actions-->
+          <!--<v-flex xs9>-->
+            <!--<vue-chartist :data="chartGlobalData" :options="chartsOptions" type="Line"></vue-chartist>-->
+          <!--</v-flex>-->
+          <v-flex xs9>
+          <v-expansion-panel expand inset>
+            <v-expansion-panel-content v-for="miner in minersArrayOfIncome"
+                                       :key="miner.id" :value="miner === 'Total'">
+              <div slot="header">{{ miner.name }} monthly profit</div>
+              <v-data-table
+                :headers="revenueTableHeaders"
+                :items="miner.data">
+                <!--hide-actions-->
 
-              <template slot="items" slot-scope="props">
-                <td>{{ props.item.month }}</td>
-                <td class="text-xs-right">{{ props.item.btc_revenue.toFixed(5) }} BTC</td>
-                <td class="text-xs-right">${{ props.item.usd_revenue.toFixed(2) }} </td>
-                <td class="text-xs-right">${{ props.item.expenses.toFixed(2) }} </td>
-                <td class="text-xs-right">${{ props.item.balance.toFixed(2) }} </td>
-              </template>
-            </v-data-table>
+                <template slot="items" slot-scope="props">
+                  <td>{{ props.item.month }}</td>
+                  <td class="text-xs-right">{{ props.item.btc_revenue.toFixed(5) }} BTC</td>
+                  <td class="text-xs-right">{{ $n(props.item.usd_revenue.toFixed(2), 'currency') }} </td>
+                  <td class="text-xs-right">{{ $n(props.item.expenses.toFixed(2), 'currency') }} </td>
+                  <td class="text-xs-right">{{ $n(props.item.balance.toFixed(2), 'currency') }} </td>
+                </template>
+              </v-data-table>
+            </v-expansion-panel-content>
+          </v-expansion-panel>
           </v-flex>
-          <!--<v-flex xs5>-->
-            <!--<v-subheader>Total revenue</v-subheader>-->
+          <!--<v-flex xs7-->
+          <!--v-for="miner in minersArrayOfIncome"-->
+          <!--:key="miner.id">-->
+            <!--<v-subheader>{{ miner.name }} Monthly Profit</v-subheader>-->
             <!--<v-data-table-->
               <!--:headers="revenueTableHeaders"-->
               <!--:items="miner.data">-->
@@ -129,10 +137,10 @@
 
               <!--<template slot="items" slot-scope="props">-->
                 <!--<td>{{ props.item.month }}</td>-->
-                <!--<td class="text-xs-right">{{ props.item.btc_revenue }} BTC</td>-->
-                <!--<td class="text-xs-right">${{ props.item.usd_revenue }} </td>-->
-                <!--<td class="text-xs-right">${{ props.item.expenses }} </td>-->
-                <!--<td class="text-xs-right">${{ props.item.balance }} </td>-->
+                <!--<td class="text-xs-right">{{ props.item.btc_revenue.toFixed(5) }} BTC</td>-->
+                <!--<td class="text-xs-right">{{ $n(props.item.usd_revenue.toFixed(2), 'currency') }} </td>-->
+                <!--<td class="text-xs-right">{{ $n(props.item.expenses.toFixed(2), 'currency') }} </td>-->
+                <!--<td class="text-xs-right">{{ $n(props.item.balance.toFixed(2), 'currency') }} </td>-->
               <!--</template>-->
             <!--</v-data-table>-->
           <!--</v-flex>-->
@@ -149,14 +157,15 @@
 
 <script>
   import axios from 'axios'
+  import VueChartist from 'v-chartist'
 
   let minersAmountWatcher = function () {
     let sum = 0
     for (let item in this.minersData) {
       if (this.minersData.hasOwnProperty(item)) {
         let cur = this.minersData[item]
-        // cur.amount = Math.floor(1 / cur.pod_limit * cur.percent / 100)
-        cur.amount = Math.floor((this.ELECTRICITY_PER_POD_LIMIT * cur.percent / 100) / cur.power) // Counted from power
+        cur.amount = Math.floor(cur.pod_limit * cur.percent / 100)
+        // cur.amount = Math.floor((this.ELECTRICITY_PER_POD_LIMIT * cur.percent / 100) / cur.power) // Counted from power
         sum += cur.amount
       }
     }
@@ -164,6 +173,9 @@
   }
 
   export default {
+    components: {
+      'vue-chartist': VueChartist
+    },
     data () {
       return {
         clipped: false,
@@ -186,23 +198,28 @@
         revenueTableHeaders: [
           {
             text: 'Month',
-            value: 'month'
+            value: 'month',
+            align: 'left'
           },
           {
-            text: 'Effic BTC',
-            value: 'btc_revenue'
+            text: 'Efficiency BTC',
+            value: 'btc_revenue',
+            align: 'right'
           },
           {
-            text: 'Effic USD',
-            value: 'usd_revenue'
+            text: 'Efficiency USD',
+            value: 'usd_revenue',
+            align: 'right'
           },
           {
             text: 'Power expenses',
-            value: 'expenses'
+            value: 'expenses',
+            align: 'right'
           },
           {
             text: 'Balance USD',
-            value: 'balance'
+            value: 'balance',
+            align: 'right'
           }
         ],
         profitDecrease: 0.95,
@@ -267,6 +284,16 @@
     computed: {
       // minerAmounts: function () {
       //   return 0
+      // },
+      // chartGlobalData: function () {
+      //   let result = {
+      //     labels: [],
+      //     series: []
+      //   }
+      //   for (let month = 0; month < this.MONTH_TO_COMPUTE; month++) {
+      //     result.labels.push(month + 1)
+      //   }
+      //   return result
       // },
       podCount: function () {
         let result = {}
@@ -370,20 +397,27 @@
       minersData: {
         handler: minersAmountWatcher,
         deep: true
-      },
-      pricePerPod: {
-        handler: minersAmountWatcher,
-        deep: true
       }
-      // 'percents.S9Percent': function () {// TODO MAKE NORMAL SUM
-      //   if (this.percents.S9Percent + this.percents.ALPHAPercent + this.percents.L3Percent !== 100) {
-      //     this.percents.L3Percent--
-      //   }
+      // pricePerPod: {
+      //   handler: minersAmountWatcher,
+      //   deep: true
       // }
     },
     methods: {
       onPercentSliderChange (input) {
         // debugger
+        let sum = this.minersPercentSum
+        // console.error(sum)
+        for (let miner in this.minersData) {
+          if (miner !== input && sum !== 100 && (this.minersData[miner].percent >= (sum - 100) || ((100 - this.minersData[miner].percent) >= (100 - sum)))) {
+            this.$set(this.minersData[miner], 'percent', this.minersData[miner].percent + 100 - sum)
+            // console.error('Set happend')
+            sum = this.minersPercentSum
+          }
+          // if (miner !== input && sum < 100 && (100 - this.minersData[miner].amount) >= (100 - sum)) {
+          //   this.$set(this.minersData[miner], 'amount', this.minersData[miner].amount + 100 - sum)
+          // }
+        }
         return input
       },
       getBTC_Revenue: function () {
