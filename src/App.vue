@@ -14,17 +14,17 @@
           Do not fit one pod
         </v-alert>
         <v-form>
-          <v-subheader>Investments</v-subheader>
-          <v-slider :min="1" :max="1000000000" v-model="investmentsAmount"></v-slider>
-          <v-text-field v-model="investmentsAmount" prefix="$" type="number" value="true"></v-text-field>
+          <v-subheader>Price per pod</v-subheader>
+          <!--<v-slider :min="1" :max="1000000000" v-model="pricePerPod"></v-slider>-->
+          <v-text-field v-model="pricePerPod" prefix="$" type="number" value="true"></v-text-field>
           <v-subheader>S9 %</v-subheader>
-          <v-slider v-on:input="onPercentSliderChange" id="s9-slider" :min="1" :max="100"
+          <v-slider v-on:input="onPercentSliderChange" id="s9-slider" :min="0" :max="100"
                     v-model="minersData.S9.percent"></v-slider>
           <v-subheader>Alpha Miner %</v-subheader>
-          <v-slider v-on:input="onPercentSliderChange" id="alpha-slider" :min="1" :max="100"
+          <v-slider v-on:input="onPercentSliderChange" id="alpha-slider" :min="0" :max="100"
                     v-model="minersData.ALPHA.percent"></v-slider>
           <v-subheader>L3+ %</v-subheader>
-          <v-slider v-on:input="onPercentSliderChange" id="l3-slider" :min="1" :max="100"
+          <v-slider v-on:input="onPercentSliderChange" id="l3-slider" :min="0" :max="100"
                     v-model="minersData.L3.percent"></v-slider>
           <v-subheader> Distributed {{minersPercentSum}}% keep it 100%</v-subheader>
           <!--<v-select label="Electricity" :items="electricity_costs" :change="electricity = "></v-select>-->
@@ -155,7 +155,8 @@
     for (let item in this.minersData) {
       if (this.minersData.hasOwnProperty(item)) {
         let cur = this.minersData[item]
-        cur.amount = Math.floor(this.investmentsAmount / cur.price * cur.percent / 100)
+        // cur.amount = Math.floor(1 / cur.pod_limit * cur.percent / 100)
+        cur.amount = Math.floor((this.ELECTRICITY_PER_POD_LIMIT * cur.percent / 100) / cur.power) // Counted from power
         sum += cur.amount
       }
     }
@@ -176,7 +177,7 @@
         right: true,
         rightDrawer: false,
         title: 'Mining Calc',
-        investmentsAmount: 1000000,
+        pricePerPod: 1000000,
         // percents: {
         //   S9Percent: 50,
         //   ALPHAPercent: 30,
@@ -204,6 +205,7 @@
             value: 'balance'
           }
         ],
+        profitDecrease: 0.95,
         minersData: {
           S9: {
             percent: 50,
@@ -245,17 +247,18 @@
         MAINTENANCE_COST_PER_KW: 23.76,
         ELECTRICITY_PER_POD_LIMIT: 1600000, // 1.6 MW
         MONTH_TO_COMPUTE: 36,
+        BASE_API_URL: 'http://localhost:3000/',
         API_ENDPOINTS: {
           BTC: {
-            URL: 'http://localhost:3000/btc',
+            URL: 'btc',
             RESPONSE: null
           },
           ALPHA: {
-            URL: 'http://localhost:3000/alpha',
+            URL: 'alpha',
             RESPONSE: null
           },
           L3: {
-            URL: 'http://localhost:3000/l3',
+            URL: 'l3',
             RESPONSE: null
           }
         }
@@ -291,21 +294,24 @@
             result += this.minersData[item].amount * this.minersData[item].price
           }
         }
-        return result
+        return result + parseFloat(this.pricePerPod)
       },
       monthToBE: function () {
-        let result = 0
+        // let result = 0
         for (let month = 0; month < this.MONTH_TO_COMPUTE; month++) {
-          for (let item in this.minersData) {
-            if (this.minersData.hasOwnProperty(item)) {
-              result += this.minersArrayOfIncome[item].data[month].balance
-            }
-            // console.error(result)
-          }
-          if (result >= this.totalInvested) {
-            return month + 1
-          } else {
-            result = 0
+          // for (let item in this.minersData) {
+          //   if (this.minersData.hasOwnProperty(item)) {
+          //     result += this.minersArrayOfIncome[item].data[month].balance
+          //   }
+          //   // console.error(result)
+          // }
+          // if (result >= this.totalInvested) {
+          //   return month + 1
+          // } else {
+          //   result = 0
+          // }
+          if (this.minersArrayOfIncome.total.data[month].balance > 0) {
+            return this.minersArrayOfIncome.total.data[month].month
           }
         }
         return null
@@ -329,28 +335,28 @@
             let cur = this.minersData[item]
             for (let month = 0; month < this.MONTH_TO_COMPUTE; month++) {
               let revenue = cur.amount * cur.btc_revenue_24 * 31
-              let usdRevenue = (revenue * this.BTC_TO_USD * (month + 1)).toFixed(2)
-              let expenses = (cur.power * this.electricity * 24 * 30 * (month + 1) / 1000).toFixed(2)
+              let usdRevenue = parseFloat((revenue * this.BTC_TO_USD * (month + 1)).toFixed(2))
+              let expenses = parseFloat((cur.amount * cur.power * this.electricity * 24 * 30 * (month + 1) / 1000).toFixed(2))
               let balance = (usdRevenue - expenses).toFixed(2)
               result[item].data[month] = {
                 month: month + 1,
                 btc_revenue: parseFloat((revenue * (month + 1)).toFixed(5)),
-                usd_revenue: parseFloat(usdRevenue),
-                expenses: parseFloat(expenses),
+                usd_revenue: usdRevenue,
+                expenses: expenses,
                 balance: parseFloat(balance)
               }
               if (result.total.data[month]) {
                 result.total.data[month].btc_revenue += parseFloat((revenue * (month + 1)).toFixed(5))
-                result.total.data[month].usd_revenue += parseFloat(usdRevenue)
-                result.total.data[month].expenses += parseFloat(expenses)
+                result.total.data[month].usd_revenue += usdRevenue
+                result.total.data[month].expenses += expenses
                 result.total.data[month].balance += parseFloat(balance)
               } else {
                 result.total.data[month] = {
                   month: month + 1,
                   btc_revenue: parseFloat((revenue * (month + 1)).toFixed(5)),
-                  usd_revenue: parseFloat(usdRevenue),
-                  expenses: parseFloat(expenses),
-                  balance: parseFloat(balance)
+                  usd_revenue: usdRevenue,
+                  expenses: expenses,
+                  balance: parseFloat(balance) - this.pricePerPod
                 }
               }
             }
@@ -365,7 +371,7 @@
         handler: minersAmountWatcher,
         deep: true
       },
-      investmentsAmount: {
+      pricePerPod: {
         handler: minersAmountWatcher,
         deep: true
       }
@@ -382,7 +388,7 @@
       },
       getBTC_Revenue: function () {
         // let url = this.API_ENDPOINTS.ASIC
-        axios.get(this.API_ENDPOINTS.BTC.URL)
+        axios.get(this.BASE_API_URL + this.API_ENDPOINTS.BTC.URL)
           .then(response => {
             this.API_ENDPOINTS.BTC.RESPONSE = response.data
             this.minersData.S9.btc_revenue_24 = this.API_ENDPOINTS.BTC.RESPONSE.btc_revenue
@@ -391,7 +397,7 @@
             // debugger
             return error
           })
-        axios.get(this.API_ENDPOINTS.ALPHA.URL)
+        axios.get(this.BASE_API_URL + this.API_ENDPOINTS.ALPHA.URL)
           .then(response => {
             this.API_ENDPOINTS.ALPHA.RESPONSE = response.data
             this.minersData.ALPHA.btc_revenue_24 = this.API_ENDPOINTS.ALPHA.RESPONSE.btc_revenue
@@ -399,7 +405,7 @@
             // debugger
             return error
           })
-        axios.get(this.API_ENDPOINTS.L3.URL)
+        axios.get(this.BASE_API_URL + this.API_ENDPOINTS.L3.URL)
           .then(response => {
             this.API_ENDPOINTS.L3.RESPONSE = response.data
             this.minersData.L3.btc_revenue_24 = this.API_ENDPOINTS.L3.RESPONSE.btc_revenue
