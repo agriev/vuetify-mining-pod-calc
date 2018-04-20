@@ -229,7 +229,7 @@
             amount: 0,
             hashrate: 14000.0, // Ghss
             power: 1500.0,
-            price: 1300.0,
+            price: 1520.0,
             btc_revenue_24: null,
             pod_limit: 980
           },
