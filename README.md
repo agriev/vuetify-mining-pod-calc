@@ -51,7 +51,7 @@ npm start
 
 Now you can open your browser and have fun
 
-If you want to help - any suggestions necessary.
+If you want to help - any suggestions welcome.
 I'm only couple of days with Vue and frontend development, 
 so If you find out the way to reduce shitcode here - just make a pull request
 
